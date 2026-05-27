@@ -1,0 +1,15 @@
+{
+  "name": "sweeptrack",
+  "version": "2.0.0",
+  "description": "Sweepstakes tracker PWA with RSS server",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "rss-parser": "^3.13.0"
+  }
+}

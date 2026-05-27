@@ -1,0 +1,2038 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="SweepTrack">
+  <meta name="theme-color" content="#0f172a">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/icon-192.png">
+  <title>SweepTrack</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    :root {
+      --bg-primary: #0f172a;
+      --bg-secondary: #1e293b;
+      --bg-tertiary: #334155;
+      --bg-card: #1e293b;
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --accent: #f59e0b;
+      --accent-light: #fbbf24;
+      --accent-glow: rgba(245, 158, 11, 0.25);
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --vehicle: #3b82f6;
+      --border: #334155;
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    body {
+      font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      min-height: -webkit-fill-available;
+      overflow: hidden;
+      position: fixed;
+      width: 100%;
+      height: 100%;
+    }
+
+    .app {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      padding-top: var(--safe-top);
+      padding-bottom: var(--safe-bottom);
+    }
+
+    /* Header */
+    .header {
+      background: var(--bg-secondary);
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+
+    .logo {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.4rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .logo-icon {
+      font-size: 1.5rem;
+      -webkit-text-fill-color: initial;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .icon-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: var(--bg-tertiary);
+      border: none;
+      color: var(--text-secondary);
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .icon-btn:active {
+      transform: scale(0.95);
+      background: var(--accent);
+      color: var(--bg-primary);
+    }
+
+    .icon-btn.active {
+      background: var(--accent);
+      color: var(--bg-primary);
+    }
+
+    /* Search bar */
+    .search-bar {
+      padding: 12px 20px;
+      background: var(--bg-primary);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    .search-input {
+      flex: 1;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 16px;
+      color: var(--text-primary);
+      font-size: 16px;
+    }
+
+    .search-input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .search-input::placeholder {
+      color: var(--text-muted);
+    }
+
+    .filter-btn {
+      padding: 12px 16px;
+      border-radius: 10px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+
+    .filter-btn.active {
+      background: var(--vehicle);
+      border-color: var(--vehicle);
+      color: white;
+    }
+
+    /* Content area */
+    .content {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 16px;
+    }
+
+    /* Cards */
+    .card {
+      background: var(--bg-card);
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 12px;
+      border: 1px solid var(--border);
+      position: relative;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      border-radius: 16px 16px 0 0;
+      background: transparent;
+    }
+
+    .card.vehicle::before {
+      background: linear-gradient(90deg, var(--vehicle), #60a5fa);
+    }
+
+    .card.tracked::before {
+      background: var(--success);
+    }
+
+    .card-badges {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+
+    .badge {
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    .badge-vehicle {
+      background: rgba(59, 130, 246, 0.15);
+      color: var(--vehicle);
+    }
+
+    .badge-source {
+      background: var(--bg-tertiary);
+      color: var(--text-secondary);
+    }
+
+    .badge-tracked {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--success);
+    }
+
+    .badge-entered {
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--accent);
+    }
+
+    .badge-ending {
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--danger);
+    }
+
+    .card-title {
+      font-size: 1rem;
+      font-weight: 600;
+      line-height: 1.4;
+      margin-bottom: 6px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .card-desc {
+      color: var(--text-secondary);
+      font-size: 13px;
+      line-height: 1.5;
+      margin-bottom: 12px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .card-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+    }
+
+    .card-date {
+      color: var(--text-muted);
+      font-size: 12px;
+    }
+
+    .card-date.urgent { color: var(--danger); }
+    .card-date.soon { color: var(--warning); }
+    .card-date.ok { color: var(--success); }
+
+    .card-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn {
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+    }
+
+    .btn:active {
+      transform: scale(0.96);
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: var(--bg-primary);
+    }
+
+    .btn-secondary {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+    }
+
+    .btn-danger {
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--danger);
+    }
+
+    .btn-success {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--success);
+    }
+
+    /* Tab bar */
+    .tab-bar {
+      display: flex;
+      background: var(--bg-secondary);
+      border-top: 1px solid var(--border);
+      padding: 8px 16px;
+      padding-bottom: calc(8px + var(--safe-bottom));
+      flex-shrink: 0;
+    }
+
+    .tab {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 8px;
+      border-radius: 12px;
+      cursor: pointer;
+      color: var(--text-muted);
+      transition: all 0.2s;
+      border: none;
+      background: none;
+    }
+
+    .tab.active {
+      color: var(--accent);
+    }
+
+    .tab-icon {
+      font-size: 22px;
+    }
+
+    .tab-label {
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .tab-badge {
+      position: absolute;
+      top: 2px;
+      right: 50%;
+      transform: translateX(14px);
+      background: var(--accent);
+      color: var(--bg-primary);
+      font-size: 10px;
+      font-weight: 700;
+      padding: 1px 5px;
+      border-radius: 8px;
+      min-width: 16px;
+      text-align: center;
+    }
+
+    .tab-icon-wrap {
+      position: relative;
+    }
+
+    /* Panel views */
+    .panel {
+      display: none;
+      flex: 1;
+      min-height: 0;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .panel.active {
+      display: flex;
+    }
+
+    /* Profile panel */
+    .profile-section {
+      padding: 20px;
+    }
+
+    .profile-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+
+    .profile-card {
+      background: var(--bg-secondary);
+      border-radius: 16px;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+
+    .profile-field {
+      display: flex;
+      align-items: center;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .profile-field:last-child {
+      border-bottom: none;
+    }
+
+    .profile-field:active {
+      background: var(--bg-tertiary);
+    }
+
+    .profile-field.copied {
+      background: rgba(16, 185, 129, 0.1);
+    }
+
+    .profile-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: var(--bg-tertiary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      margin-right: 12px;
+      flex-shrink: 0;
+    }
+
+    .profile-field.copied .profile-icon {
+      background: var(--success);
+    }
+
+    .profile-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .profile-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 2px;
+    }
+
+    .profile-value {
+      font-size: 15px;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .profile-value.empty {
+      color: var(--text-muted);
+      font-style: italic;
+    }
+
+    .profile-copy {
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    .profile-field.copied .profile-copy {
+      color: var(--success);
+    }
+
+    /* Form inputs for editing profile */
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+      font-weight: 500;
+    }
+
+    .form-input {
+      width: 100%;
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      color: var(--text-primary);
+      font-size: 16px;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    textarea.form-input {
+      min-height: 80px;
+      resize: vertical;
+    }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.75);
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal {
+      background: var(--bg-secondary);
+      border-radius: 20px 20px 0 0;
+      width: 100%;
+      max-width: 500px;
+      max-height: 85vh;
+      overflow-y: auto;
+      transform: translateY(100%);
+      transition: transform 0.3s ease-out;
+    }
+
+    .modal-overlay.active .modal {
+      transform: translateY(0);
+    }
+
+    .modal-handle {
+      width: 36px;
+      height: 4px;
+      background: var(--bg-tertiary);
+      border-radius: 2px;
+      margin: 12px auto;
+    }
+
+    .modal-header {
+      padding: 0 20px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 28px;
+      cursor: pointer;
+      padding: 4px;
+      line-height: 1;
+    }
+
+    .modal-body {
+      padding: 0 20px 20px;
+    }
+
+    .modal-footer {
+      padding: 16px 20px;
+      padding-bottom: calc(16px + var(--safe-bottom));
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 12px;
+    }
+
+    .modal-footer .btn {
+      flex: 1;
+      padding: 14px;
+      font-size: 15px;
+    }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+    }
+
+    .empty-icon {
+      font-size: 56px;
+      margin-bottom: 16px;
+      opacity: 0.6;
+    }
+
+    .empty-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .empty-text {
+      color: var(--text-secondary);
+      margin-bottom: 20px;
+      font-size: 14px;
+    }
+
+    /* Loading */
+    .loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 60px;
+    }
+
+    .spinner {
+      width: 36px;
+      height: 36px;
+      border: 3px solid var(--bg-tertiary);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: calc(80px + var(--safe-bottom));
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+      z-index: 2000;
+      opacity: 0;
+      transition: all 0.3s ease;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    .toast-icon {
+      font-size: 18px;
+    }
+
+    .toast.success .toast-icon { color: var(--success); }
+    .toast.error .toast-icon { color: var(--danger); }
+
+    .toast-message {
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    /* Status filter */
+    .status-filter {
+      display: flex;
+      background: var(--bg-secondary);
+      border-radius: 10px;
+      padding: 4px;
+      margin: 12px 16px;
+    }
+
+    .status-btn {
+      flex: 1;
+      padding: 10px;
+      border-radius: 8px;
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+
+    .status-btn.active {
+      background: var(--bg-primary);
+      color: var(--text-primary);
+    }
+
+    /* Settings list */
+    .settings-list {
+      padding: 20px;
+    }
+
+    .settings-item {
+      background: var(--bg-secondary);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .settings-item-info h4 {
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .settings-item-info p {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* Quick copy panel (slides up when entering) */
+    .quick-copy {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--bg-secondary);
+      border-top: 1px solid var(--border);
+      padding: 16px;
+      padding-bottom: calc(16px + var(--safe-bottom));
+      transform: translateY(100%);
+      transition: transform 0.3s ease;
+      z-index: 500;
+    }
+
+    .quick-copy.show {
+      transform: translateY(0);
+    }
+
+    .quick-copy-title {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .quick-copy-close {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 20px;
+      cursor: pointer;
+    }
+
+    .quick-copy-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .quick-copy-btn {
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .quick-copy-btn:active {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+
+    .quick-copy-btn:active .qc-icon,
+    .quick-copy-btn:active .qc-label {
+      color: var(--bg-primary);
+    }
+
+    .quick-copy-btn.copied {
+      background: rgba(16, 185, 129, 0.15);
+      border-color: var(--success);
+    }
+
+    .qc-icon {
+      font-size: 20px;
+    }
+
+    .qc-label {
+      font-size: 11px;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    .quick-copy-btn.copied .qc-label {
+      color: var(--success);
+    }
+
+    @media (min-width: 768px) {
+      .quick-copy-grid {
+        grid-template-columns: repeat(6, 1fr);
+      }
+    }
+
+    /* Sub-tabs */
+    .sub-tabs {
+      display: flex;
+      background: var(--bg-primary);
+      padding: 8px 16px 0;
+      gap: 8px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .sub-tab {
+      padding: 10px 16px;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+      margin-bottom: -1px;
+    }
+
+    .sub-tab.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+
+    .sub-panel {
+      display: none;
+      flex: 1;
+      min-height: 0;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .sub-panel.active {
+      display: flex;
+    }
+
+    /* Server status indicator */
+    .server-status {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: var(--bg-tertiary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--text-muted);
+      transition: all 0.3s;
+    }
+
+    .status-dot.connected {
+      background: var(--success);
+      box-shadow: 0 0 8px var(--success);
+    }
+
+    .status-dot.disconnected {
+      background: var(--danger);
+    }
+
+    /* Site cards for Browse */
+    .site-card {
+      background: var(--bg-card);
+      border-radius: 14px;
+      padding: 14px 16px;
+      margin-bottom: 10px;
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .site-card:active {
+      transform: scale(0.98);
+      background: var(--bg-tertiary);
+    }
+
+    .site-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: var(--bg-tertiary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+
+    .site-card.vehicle .site-icon {
+      background: rgba(59, 130, 246, 0.15);
+    }
+
+    .site-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .site-name {
+      font-weight: 600;
+      font-size: 15px;
+      margin-bottom: 2px;
+    }
+
+    .site-desc {
+      font-size: 12px;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .site-arrow {
+      color: var(--text-muted);
+      font-size: 18px;
+    }
+
+    .site-section-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin: 20px 0 12px;
+      padding: 0 4px;
+    }
+
+    .site-section-title:first-child {
+      margin-top: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- Discover Panel -->
+    <div class="panel active" id="panel-discover">
+      <header class="header">
+        <div class="logo">
+          <span class="logo-icon">🎯</span>
+          SweepTrack
+        </div>
+        <div class="header-actions">
+          <div class="server-status" id="server-status" title="Server status">
+            <span class="status-dot" id="status-dot"></span>
+          </div>
+          <button class="icon-btn" id="btn-refresh" title="Refresh">🔄</button>
+        </div>
+      </header>
+      
+      <!-- Sub-tabs for Discover -->
+      <div class="sub-tabs">
+        <button class="sub-tab active" data-subtab="feeds">📡 RSS Feeds</button>
+        <button class="sub-tab" data-subtab="sites">🌐 Browse Sites</button>
+      </div>
+      
+      <!-- RSS Feeds sub-panel -->
+      <div class="sub-panel active" id="subpanel-feeds">
+        <div class="search-bar">
+          <input type="text" class="search-input" placeholder="Search sweepstakes..." id="discover-search">
+          <button class="filter-btn active" id="filter-vehicle">🚗 Vehicles</button>
+        </div>
+        
+        <div class="content" id="discover-content">
+          <div class="loading" id="discover-loading">
+            <div class="spinner"></div>
+          </div>
+          <div id="discover-empty" class="empty-state" style="display:none;">
+            <div class="empty-icon">🔍</div>
+            <h3 class="empty-title">No sweepstakes found</h3>
+            <p class="empty-text">Try adjusting filters or refresh</p>
+            <button class="btn btn-primary" onclick="refreshFeeds()">🔄 Refresh</button>
+          </div>
+          <div id="discover-list"></div>
+        </div>
+      </div>
+      
+      <!-- Browse Sites sub-panel -->
+      <div class="sub-panel" id="subpanel-sites">
+        <div class="content">
+          <p style="color: var(--text-secondary); font-size: 14px; padding: 0 4px 16px; line-height: 1.5;">
+            Tap any site to browse it in Safari. Use the Quick Copy tab to fill in your info faster.
+          </p>
+          <div id="sites-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tracker Panel -->
+    <div class="panel" id="panel-tracker">
+      <header class="header">
+        <div class="logo">
+          <span class="logo-icon">📋</span>
+          My Tracker
+        </div>
+        <div class="header-actions">
+          <button class="icon-btn" id="btn-add" title="Add manually">➕</button>
+        </div>
+      </header>
+      
+      <div class="status-filter">
+        <button class="status-btn active" data-status="all">All</button>
+        <button class="status-btn" data-status="not-entered">To Enter</button>
+        <button class="status-btn" data-status="entered">Entered</button>
+      </div>
+      
+      <div class="content" id="tracker-content">
+        <div id="tracker-empty" class="empty-state" style="display:none;">
+          <div class="empty-icon">📋</div>
+          <h3 class="empty-title">Nothing tracked yet</h3>
+          <p class="empty-text">Add sweepstakes from Discover or manually</p>
+          <button class="btn btn-primary" onclick="switchTab('discover')">🔍 Discover</button>
+        </div>
+        <div id="tracker-list"></div>
+      </div>
+    </div>
+
+    <!-- Profile Panel -->
+    <div class="panel" id="panel-profile">
+      <header class="header">
+        <div class="logo">
+          <span class="logo-icon">👤</span>
+          Quick Copy
+        </div>
+        <div class="header-actions">
+          <button class="icon-btn" id="btn-edit-profile" title="Edit">✏️</button>
+        </div>
+      </header>
+      
+      <div class="content">
+        <div class="profile-section">
+          <p style="color: var(--text-secondary); font-size: 14px; margin-bottom: 20px;">
+            Tap any field to copy it to your clipboard, then paste into sweepstakes forms.
+          </p>
+          
+          <div class="profile-card" id="profile-fields">
+            <!-- Populated by JS -->
+          </div>
+
+          <h3 class="profile-title" style="margin-top: 32px;">Tips</h3>
+          <div style="color: var(--text-secondary); font-size: 14px; line-height: 1.6;">
+            <p style="margin-bottom: 12px;">💡 Open a sweepstakes, then come back here to copy fields one by one.</p>
+            <p style="margin-bottom: 12px;">📱 On iPad, use Split View to have SweepTrack and Safari side by side.</p>
+            <p>⚡ Most forms: Email → Name → Address → Phone → Submit!</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings Panel -->
+    <div class="panel" id="panel-settings">
+      <header class="header">
+        <div class="logo">
+          <span class="logo-icon">⚙️</span>
+          Settings
+        </div>
+      </header>
+      
+      <div class="content">
+        <div class="settings-list">
+          <h3 class="profile-title">RSS Feeds</h3>
+          <div id="feeds-list"></div>
+          <button class="btn btn-secondary" style="width: 100%; margin-top: 12px;" id="btn-add-feed">➕ Add Feed</button>
+          
+          <h3 class="profile-title" style="margin-top: 32px;">Data</h3>
+          <div class="settings-item">
+            <div class="settings-item-info">
+              <h4>Export Data</h4>
+              <p>Download your tracked sweepstakes</p>
+            </div>
+            <button class="btn btn-secondary" onclick="exportData()">Export</button>
+          </div>
+          
+          <h3 class="profile-title" style="margin-top: 32px;">About</h3>
+          <p style="color: var(--text-secondary); font-size: 14px; line-height: 1.6;">
+            SweepTrack v2.0<br>
+            A sweepstakes tracker built for speed. Find sweeps, track them, enter fast with quick-copy.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab Bar -->
+    <nav class="tab-bar">
+      <button class="tab active" data-tab="discover">
+        <div class="tab-icon-wrap">
+          <span class="tab-icon">🔍</span>
+          <span class="tab-badge" id="badge-discover" style="display:none;">0</span>
+        </div>
+        <span class="tab-label">Discover</span>
+      </button>
+      <button class="tab" data-tab="tracker">
+        <div class="tab-icon-wrap">
+          <span class="tab-icon">📋</span>
+          <span class="tab-badge" id="badge-tracker" style="display:none;">0</span>
+        </div>
+        <span class="tab-label">Tracker</span>
+      </button>
+      <button class="tab" data-tab="profile">
+        <span class="tab-icon">👤</span>
+        <span class="tab-label">Quick Copy</span>
+      </button>
+      <button class="tab" data-tab="settings">
+        <span class="tab-icon">⚙️</span>
+        <span class="tab-label">Settings</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- Add/Edit Sweepstakes Modal -->
+  <div class="modal-overlay" id="modal-sweep">
+    <div class="modal">
+      <div class="modal-handle"></div>
+      <div class="modal-header">
+        <h3 class="modal-title" id="modal-sweep-title">Add Sweepstakes</h3>
+        <button class="modal-close" onclick="closeModal('modal-sweep')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Title *</label>
+          <input type="text" class="form-input" id="form-title" placeholder="e.g., Win a 2024 Ford Mustang">
+        </div>
+        <div class="form-group">
+          <label class="form-label">URL *</label>
+          <input type="url" class="form-input" id="form-url" placeholder="https://...">
+        </div>
+        <div class="form-group">
+          <label class="form-label">End Date</label>
+          <input type="date" class="form-input" id="form-enddate">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Notes</label>
+          <textarea class="form-input" id="form-notes" placeholder="Any notes..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('modal-sweep')">Cancel</button>
+        <button class="btn btn-primary" onclick="saveSweep()">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Profile Modal -->
+  <div class="modal-overlay" id="modal-profile">
+    <div class="modal">
+      <div class="modal-handle"></div>
+      <div class="modal-header">
+        <h3 class="modal-title">Edit Profile</h3>
+        <button class="modal-close" onclick="closeModal('modal-profile')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">First Name</label>
+          <input type="text" class="form-input" id="profile-firstname" placeholder="John">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Last Name</label>
+          <input type="text" class="form-input" id="profile-lastname" placeholder="Doe">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input type="email" class="form-input" id="profile-email" placeholder="john@example.com">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Phone</label>
+          <input type="tel" class="form-input" id="profile-phone" placeholder="(555) 123-4567">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Street Address</label>
+          <input type="text" class="form-input" id="profile-street" placeholder="123 Main St">
+        </div>
+        <div class="form-group">
+          <label class="form-label">City</label>
+          <input type="text" class="form-input" id="profile-city" placeholder="San Francisco">
+        </div>
+        <div class="form-group">
+          <label class="form-label">State</label>
+          <input type="text" class="form-input" id="profile-state" placeholder="CA">
+        </div>
+        <div class="form-group">
+          <label class="form-label">ZIP Code</label>
+          <input type="text" class="form-input" id="profile-zip" placeholder="94102">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('modal-profile')">Cancel</button>
+        <button class="btn btn-primary" onclick="saveProfile()">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Feed Modal -->
+  <div class="modal-overlay" id="modal-feed">
+    <div class="modal">
+      <div class="modal-handle"></div>
+      <div class="modal-header">
+        <h3 class="modal-title">Add RSS Feed</h3>
+        <button class="modal-close" onclick="closeModal('modal-feed')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Feed Name</label>
+          <input type="text" class="form-input" id="feed-name" placeholder="My Sweeps Blog">
+        </div>
+        <div class="form-group">
+          <label class="form-label">RSS URL</label>
+          <input type="url" class="form-input" id="feed-url" placeholder="https://example.com/feed.xml">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('modal-feed')">Cancel</button>
+        <button class="btn btn-primary" onclick="saveFeed()">Add</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast">
+    <span class="toast-icon">✓</span>
+    <span class="toast-message" id="toast-message">Copied!</span>
+  </div>
+
+  <script>
+    // ===== APP STATE =====
+    const API_BASE = window.location.origin;
+    
+    let state = {
+      discovered: [],
+      tracked: [],
+      feeds: [],
+      profile: {
+        firstName: '',
+        lastName: '',
+        email: '',
+        phone: '',
+        street: '',
+        city: '',
+        state: '',
+        zip: ''
+      },
+      settings: {
+        vehicleFilter: true
+      }
+    };
+
+    let currentTab = 'discover';
+    let currentSubTab = 'feeds';
+    let trackerFilter = 'all';
+    let editingId = null;
+    let serverConnected = false;
+
+    // ===== CURATED SWEEPSTAKES SITES =====
+    const curatedSites = {
+      vehicle: [
+        {
+          name: 'Motor Trend Sweepstakes',
+          url: 'https://www.motortrend.com/sweepstakes/',
+          desc: 'Car magazine giveaways',
+          icon: '🏎️'
+        },
+        {
+          name: 'Omaze',
+          url: 'https://www.omaze.com/collections/cars-trucks',
+          desc: 'Premium car & truck sweeps',
+          icon: '🚗'
+        },
+        {
+          name: 'Dream Giveaway',
+          url: 'https://www.dreamgiveaway.com/',
+          desc: 'Classic & exotic cars',
+          icon: '🏁'
+        },
+        {
+          name: 'Ford Sweepstakes',
+          url: 'https://www.ford.com/sweepstakes/',
+          desc: 'Official Ford promotions',
+          icon: '🚙'
+        }
+      ],
+      aggregators: [
+        {
+          name: 'Sweepstakes Advantage',
+          url: 'https://www.sweepsadvantage.com/',
+          desc: 'Largest sweepstakes directory',
+          icon: '🎯'
+        },
+        {
+          name: 'Sweeties Sweeps',
+          url: 'https://sweetiessweeps.com/',
+          desc: 'Daily curated list',
+          icon: '🍭'
+        },
+        {
+          name: 'Contest Girl',
+          url: 'https://www.contestgirl.com/',
+          desc: 'Sweepstakes & contests',
+          icon: '👩'
+        },
+        {
+          name: 'Online-Sweepstakes',
+          url: 'https://www.online-sweepstakes.com/',
+          desc: 'Active sweepstakes list',
+          icon: '🌐'
+        },
+        {
+          name: 'Sun Sweeps',
+          url: 'https://sunsweeps.com/',
+          desc: 'Sweeps blog & forum',
+          icon: '☀️'
+        }
+      ],
+      general: [
+        {
+          name: 'PCH Sweepstakes',
+          url: 'https://www.pch.com/',
+          desc: 'Publishers Clearing House',
+          icon: '💰'
+        },
+        {
+          name: 'HGTV Sweepstakes',
+          url: 'https://www.hgtv.com/sweepstakes',
+          desc: 'Dream home & more',
+          icon: '🏠'
+        },
+        {
+          name: 'Food Network',
+          url: 'https://www.foodnetwork.com/sweepstakes',
+          desc: 'Food & lifestyle prizes',
+          icon: '🍳'
+        },
+        {
+          name: 'Reader\'s Digest',
+          url: 'https://www.rd.com/sweepstakes/',
+          desc: 'Various sweepstakes',
+          icon: '📖'
+        }
+      ]
+    };
+
+    // ===== INITIALIZATION =====
+    async function init() {
+      loadState();
+      renderProfile();
+      renderFeeds();
+      renderSites();
+      setupEventListeners();
+      await checkServerAndLoad();
+      
+      // Register service worker
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js');
+      }
+    }
+
+    async function checkServerAndLoad() {
+      // Try to ping server
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3000);
+        
+        const response = await fetch(`${API_BASE}/api/health`, { 
+          signal: controller.signal 
+        });
+        clearTimeout(timeoutId);
+        
+        if (response.ok) {
+          serverConnected = true;
+          updateServerStatus(true);
+          await refreshFeeds();
+          return;
+        }
+      } catch (error) {
+        console.log('Server not available, using standalone mode');
+      }
+      
+      serverConnected = false;
+      updateServerStatus(false);
+      showStandaloneMode();
+    }
+
+    function updateServerStatus(connected) {
+      const dot = document.getElementById('status-dot');
+      const status = document.getElementById('server-status');
+      
+      if (connected) {
+        dot.classList.add('connected');
+        dot.classList.remove('disconnected');
+        status.title = 'Server connected - RSS feeds available';
+      } else {
+        dot.classList.add('disconnected');
+        dot.classList.remove('connected');
+        status.title = 'Standalone mode - browse sites manually';
+      }
+    }
+
+    function showStandaloneMode() {
+      // Hide loading, show empty state with helpful message
+      showLoading(false);
+      const list = document.getElementById('discover-list');
+      list.innerHTML = `
+        <div style="text-align: center; padding: 30px 20px;">
+          <div style="font-size: 48px; margin-bottom: 16px;">📱</div>
+          <h3 style="font-size: 1.2rem; margin-bottom: 8px;">Standalone Mode</h3>
+          <p style="color: var(--text-secondary); font-size: 14px; line-height: 1.6; margin-bottom: 20px;">
+            Not connected to home server. Use <strong style="color: var(--accent);">Browse Sites</strong> to find sweepstakes in Safari.
+          </p>
+          <button class="btn btn-primary" onclick="switchSubTab('sites')">🌐 Browse Sites</button>
+          <p style="color: var(--text-muted); font-size: 12px; margin-top: 24px;">
+            Connect to your home WiFi to get RSS feeds with auto-discovery.
+          </p>
+        </div>
+      `;
+      document.getElementById('discover-empty').style.display = 'none';
+    }
+
+    function loadState() {
+      const saved = localStorage.getItem('sweeptrack-data');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        state = { ...state, ...parsed };
+      }
+    }
+
+    function saveState() {
+      localStorage.setItem('sweeptrack-data', JSON.stringify(state));
+    }
+
+    // ===== CURATED SITES =====
+    function renderSites() {
+      const container = document.getElementById('sites-list');
+      let html = '';
+      
+      // Vehicle sites first (Josh's preference)
+      html += '<div class="site-section-title">🚗 Vehicle Sweepstakes</div>';
+      html += curatedSites.vehicle.map(site => renderSiteCard(site, true)).join('');
+      
+      html += '<div class="site-section-title">📡 Aggregator Sites</div>';
+      html += curatedSites.aggregators.map(site => renderSiteCard(site, false)).join('');
+      
+      html += '<div class="site-section-title">🎁 General Sweepstakes</div>';
+      html += curatedSites.general.map(site => renderSiteCard(site, false)).join('');
+      
+      container.innerHTML = html;
+    }
+
+    function renderSiteCard(site, isVehicle) {
+      return `
+        <div class="site-card ${isVehicle ? 'vehicle' : ''}" onclick="openSite('${esc(site.url)}', '${esc(site.name)}')">
+          <div class="site-icon">${site.icon}</div>
+          <div class="site-info">
+            <div class="site-name">${esc(site.name)}</div>
+            <div class="site-desc">${esc(site.desc)}</div>
+          </div>
+          <span class="site-arrow">→</span>
+        </div>
+      `;
+    }
+
+    function openSite(url, name) {
+      window.open(url, '_blank');
+      showToast(`Opening ${name}...`, 'success');
+    }
+
+    function switchSubTab(subtab) {
+      currentSubTab = subtab;
+      document.querySelectorAll('.sub-tab').forEach(t => t.classList.remove('active'));
+      document.querySelector(`[data-subtab="${subtab}"]`).classList.add('active');
+      document.querySelectorAll('.sub-panel').forEach(p => p.classList.remove('active'));
+      document.getElementById(`subpanel-${subtab}`).classList.add('active');
+    }
+
+    // ===== RSS FEEDS =====
+    async function refreshFeeds() {
+      showLoading(true);
+      try {
+        const feeds = state.feeds.length > 0 ? state.feeds : await getDefaultFeeds();
+        if (state.feeds.length === 0) {
+          state.feeds = feeds;
+          saveState();
+          renderFeeds();
+        }
+        
+        const response = await fetch(`${API_BASE}/api/fetch-feeds`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ feeds: state.feeds })
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+          state.discovered = data.items;
+          renderDiscover();
+          showToast('Feeds refreshed!', 'success');
+        }
+      } catch (error) {
+        console.error('Error fetching feeds:', error);
+        showLoading(false);
+        serverConnected = false;
+        updateServerStatus(false);
+        showStandaloneMode();
+        showToast('Switched to standalone mode', 'error');
+        return;
+      }
+      showLoading(false);
+    }
+
+    async function getDefaultFeeds() {
+      try {
+        const response = await fetch(`${API_BASE}/api/default-feeds`);
+        const data = await response.json();
+        return data.feeds;
+      } catch {
+        return [
+          { name: 'Sweepstakes Advantage', url: 'https://www.sweepsadvantage.com/rss.xml', category: 'general' },
+          { name: 'Sweeties Sweeps', url: 'https://sweetiessweeps.com/feed/', category: 'general' }
+        ];
+      }
+    }
+
+    // ===== RENDER FUNCTIONS =====
+    function renderDiscover() {
+      const list = document.getElementById('discover-list');
+      const empty = document.getElementById('discover-empty');
+      const search = document.getElementById('discover-search').value.toLowerCase();
+      const vehicleOnly = state.settings.vehicleFilter;
+
+      let items = state.discovered.filter(item => {
+        if (vehicleOnly && !item.isVehicle) return false;
+        if (search && !item.title.toLowerCase().includes(search) && 
+            !item.description.toLowerCase().includes(search)) return false;
+        return true;
+      });
+
+      updateBadge('discover', items.filter(i => i.isVehicle).length);
+
+      if (items.length === 0) {
+        list.innerHTML = '';
+        empty.style.display = 'block';
+        return;
+      }
+
+      empty.style.display = 'none';
+      list.innerHTML = items.map(item => {
+        const isTracked = state.tracked.some(t => t.link === item.link);
+        return `
+          <div class="card ${item.isVehicle ? 'vehicle' : ''} ${isTracked ? 'tracked' : ''}">
+            <div class="card-badges">
+              ${item.isVehicle ? '<span class="badge badge-vehicle">🚗 Vehicle</span>' : ''}
+              <span class="badge badge-source">${esc(item.source)}</span>
+              ${isTracked ? '<span class="badge badge-tracked">✓ Tracked</span>' : ''}
+            </div>
+            <h3 class="card-title">${esc(item.title)}</h3>
+            <p class="card-desc">${esc(item.description)}</p>
+            <div class="card-meta">
+              <span class="card-date">📅 ${formatDate(item.pubDate)}</span>
+              <div class="card-actions">
+                <button class="btn btn-secondary" onclick="openLink('${esc(item.link)}')">Open</button>
+                ${isTracked ? 
+                  `<button class="btn btn-danger" onclick="untrack('${esc(item.link)}')">Remove</button>` :
+                  `<button class="btn btn-primary" onclick="quickTrack(${JSON.stringify(item).replace(/"/g, '&quot;')})">Track</button>`
+                }
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderTracker() {
+      const list = document.getElementById('tracker-list');
+      const empty = document.getElementById('tracker-empty');
+
+      let items = state.tracked.filter(item => {
+        if (trackerFilter === 'entered') return item.entered;
+        if (trackerFilter === 'not-entered') return !item.entered;
+        return true;
+      });
+
+      items.sort((a, b) => {
+        if (!a.endDate) return 1;
+        if (!b.endDate) return -1;
+        return new Date(a.endDate) - new Date(b.endDate);
+      });
+
+      updateBadge('tracker', state.tracked.filter(t => !t.entered).length);
+
+      if (items.length === 0) {
+        list.innerHTML = '';
+        empty.style.display = 'block';
+        return;
+      }
+
+      empty.style.display = 'none';
+      list.innerHTML = items.map(item => {
+        const deadlineClass = getDeadlineClass(item.endDate);
+        const endingSoon = isEndingSoon(item.endDate);
+        return `
+          <div class="card ${item.isVehicle ? 'vehicle' : ''}">
+            <div class="card-badges">
+              ${item.isVehicle ? '<span class="badge badge-vehicle">🚗 Vehicle</span>' : ''}
+              ${item.entered ? '<span class="badge badge-entered">✓ Entered</span>' : ''}
+              ${endingSoon ? '<span class="badge badge-ending">⏰ Soon</span>' : ''}
+            </div>
+            <h3 class="card-title">${esc(item.title)}</h3>
+            <p class="card-desc">${esc(item.notes || item.description || 'No notes')}</p>
+            <div class="card-meta">
+              <span class="card-date ${deadlineClass}">
+                ${item.endDate ? `📅 Ends: ${formatDate(item.endDate)}` : '📅 No end date'}
+              </span>
+              <div class="card-actions">
+                <button class="btn btn-secondary" onclick="openLink('${esc(item.link)}')">Open</button>
+                <button class="btn ${item.entered ? 'btn-secondary' : 'btn-success'}" onclick="toggleEntered('${item.id}')">
+                  ${item.entered ? 'Undo' : '✓ Done'}
+                </button>
+                <button class="btn btn-danger" onclick="removeTracked('${item.id}')">🗑</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderProfile() {
+      const container = document.getElementById('profile-fields');
+      const p = state.profile;
+      
+      const fields = [
+        { icon: '📧', label: 'Email', value: p.email, key: 'email' },
+        { icon: '👤', label: 'First Name', value: p.firstName, key: 'firstName' },
+        { icon: '👤', label: 'Last Name', value: p.lastName, key: 'lastName' },
+        { icon: '📱', label: 'Phone', value: p.phone, key: 'phone' },
+        { icon: '🏠', label: 'Street', value: p.street, key: 'street' },
+        { icon: '🏙️', label: 'City', value: p.city, key: 'city' },
+        { icon: '📍', label: 'State', value: p.state, key: 'state' },
+        { icon: '📮', label: 'ZIP', value: p.zip, key: 'zip' }
+      ];
+
+      container.innerHTML = fields.map(f => `
+        <div class="profile-field" onclick="copyField('${f.key}', '${esc(f.value)}', this)">
+          <div class="profile-icon">${f.icon}</div>
+          <div class="profile-info">
+            <div class="profile-label">${f.label}</div>
+            <div class="profile-value ${f.value ? '' : 'empty'}">${f.value || 'Tap edit to add'}</div>
+          </div>
+          <span class="profile-copy">📋</span>
+        </div>
+      `).join('');
+    }
+
+    function renderFeeds() {
+      const container = document.getElementById('feeds-list');
+      container.innerHTML = state.feeds.map((feed, i) => `
+        <div class="settings-item">
+          <div class="settings-item-info">
+            <h4>${esc(feed.name)}</h4>
+            <p>${esc(feed.url)}</p>
+          </div>
+          <button class="btn btn-danger" onclick="removeFeed(${i})">✕</button>
+        </div>
+      `).join('');
+    }
+
+    // ===== ACTIONS =====
+    function quickTrack(item) {
+      const tracked = {
+        id: generateId(),
+        title: item.title,
+        link: item.link,
+        description: item.description,
+        source: item.source,
+        isVehicle: item.isVehicle,
+        entered: false,
+        addedDate: new Date().toISOString(),
+        endDate: null,
+        notes: ''
+      };
+      state.tracked.push(tracked);
+      saveState();
+      renderDiscover();
+      renderTracker();
+      showToast('Added to tracker!', 'success');
+    }
+
+    function untrack(link) {
+      state.tracked = state.tracked.filter(t => t.link !== link);
+      saveState();
+      renderDiscover();
+      renderTracker();
+      showToast('Removed', 'success');
+    }
+
+    function toggleEntered(id) {
+      const item = state.tracked.find(t => t.id === id);
+      if (item) {
+        item.entered = !item.entered;
+        saveState();
+        renderTracker();
+        showToast(item.entered ? 'Marked as entered!' : 'Marked as not entered', 'success');
+      }
+    }
+
+    function removeTracked(id) {
+      state.tracked = state.tracked.filter(t => t.id !== id);
+      saveState();
+      renderTracker();
+      showToast('Removed', 'success');
+    }
+
+    function openLink(url) {
+      window.open(url, '_blank');
+    }
+
+    function copyField(key, value, element) {
+      if (!value) {
+        showToast('No value to copy - tap edit to add', 'error');
+        return;
+      }
+      
+      navigator.clipboard.writeText(value).then(() => {
+        element.classList.add('copied');
+        showToast(`${key.charAt(0).toUpperCase() + key.slice(1)} copied!`, 'success');
+        setTimeout(() => element.classList.remove('copied'), 1500);
+      }).catch(() => {
+        showToast('Could not copy', 'error');
+      });
+    }
+
+    function removeFeed(index) {
+      state.feeds.splice(index, 1);
+      saveState();
+      renderFeeds();
+      showToast('Feed removed', 'success');
+    }
+
+    // ===== MODALS =====
+    function openModal(id) {
+      document.getElementById(id).classList.add('active');
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.remove('active');
+      editingId = null;
+    }
+
+    function openAddSweep() {
+      editingId = null;
+      document.getElementById('modal-sweep-title').textContent = 'Add Sweepstakes';
+      document.getElementById('form-title').value = '';
+      document.getElementById('form-url').value = '';
+      document.getElementById('form-enddate').value = '';
+      document.getElementById('form-notes').value = '';
+      openModal('modal-sweep');
+    }
+
+    async function saveSweep() {
+      const title = document.getElementById('form-title').value.trim();
+      const url = document.getElementById('form-url').value.trim();
+      const endDate = document.getElementById('form-enddate').value;
+      const notes = document.getElementById('form-notes').value.trim();
+
+      if (!title || !url) {
+        showToast('Title and URL required', 'error');
+        return;
+      }
+
+      // Check if vehicle-related
+      let isVehicle = false;
+      try {
+        const response = await fetch(`${API_BASE}/api/check-vehicle`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title, description: notes })
+        });
+        const data = await response.json();
+        isVehicle = data.isVehicle;
+      } catch {}
+
+      const sweep = {
+        id: generateId(),
+        title,
+        link: url,
+        description: '',
+        source: 'Manual',
+        isVehicle,
+        entered: false,
+        addedDate: new Date().toISOString(),
+        endDate: endDate || null,
+        notes
+      };
+
+      state.tracked.push(sweep);
+      saveState();
+      closeModal('modal-sweep');
+      renderTracker();
+      showToast('Sweepstakes added!', 'success');
+    }
+
+    function openEditProfile() {
+      const p = state.profile;
+      document.getElementById('profile-firstname').value = p.firstName;
+      document.getElementById('profile-lastname').value = p.lastName;
+      document.getElementById('profile-email').value = p.email;
+      document.getElementById('profile-phone').value = p.phone;
+      document.getElementById('profile-street').value = p.street;
+      document.getElementById('profile-city').value = p.city;
+      document.getElementById('profile-state').value = p.state;
+      document.getElementById('profile-zip').value = p.zip;
+      openModal('modal-profile');
+    }
+
+    function saveProfile() {
+      state.profile = {
+        firstName: document.getElementById('profile-firstname').value.trim(),
+        lastName: document.getElementById('profile-lastname').value.trim(),
+        email: document.getElementById('profile-email').value.trim(),
+        phone: document.getElementById('profile-phone').value.trim(),
+        street: document.getElementById('profile-street').value.trim(),
+        city: document.getElementById('profile-city').value.trim(),
+        state: document.getElementById('profile-state').value.trim(),
+        zip: document.getElementById('profile-zip').value.trim()
+      };
+      saveState();
+      closeModal('modal-profile');
+      renderProfile();
+      showToast('Profile saved!', 'success');
+    }
+
+    function saveFeed() {
+      const name = document.getElementById('feed-name').value.trim();
+      const url = document.getElementById('feed-url').value.trim();
+
+      if (!name || !url) {
+        showToast('Name and URL required', 'error');
+        return;
+      }
+
+      state.feeds.push({ name, url, category: 'custom' });
+      saveState();
+      closeModal('modal-feed');
+      renderFeeds();
+      showToast('Feed added!', 'success');
+    }
+
+    function exportData() {
+      const data = JSON.stringify(state, null, 2);
+      const blob = new Blob([data], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'sweeptrack-export.json';
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('Data exported!', 'success');
+    }
+
+    // ===== UI HELPERS =====
+    function switchTab(tab) {
+      currentTab = tab;
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+      document.getElementById(`panel-${tab}`).classList.add('active');
+      
+      if (tab === 'tracker') renderTracker();
+    }
+
+    function showLoading(show) {
+      document.getElementById('discover-loading').style.display = show ? 'flex' : 'none';
+      document.getElementById('discover-list').style.display = show ? 'none' : 'block';
+    }
+
+    function showToast(message, type = 'success') {
+      const toast = document.getElementById('toast');
+      const msgEl = document.getElementById('toast-message');
+      toast.className = `toast ${type}`;
+      toast.querySelector('.toast-icon').textContent = type === 'success' ? '✓' : '✕';
+      msgEl.textContent = message;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2500);
+    }
+
+    function updateBadge(tab, count) {
+      const badge = document.getElementById(`badge-${tab}`);
+      if (count > 0) {
+        badge.textContent = count > 99 ? '99+' : count;
+        badge.style.display = 'block';
+      } else {
+        badge.style.display = 'none';
+      }
+    }
+
+    // ===== UTILITIES =====
+    function esc(str) {
+      if (!str) return '';
+      return String(str).replace(/[&<>"']/g, m => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      }[m]));
+    }
+
+    function formatDate(dateStr) {
+      if (!dateStr) return 'Unknown';
+      const d = new Date(dateStr);
+      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    }
+
+    function generateId() {
+      return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+    }
+
+    function isEndingSoon(dateStr) {
+      if (!dateStr) return false;
+      const end = new Date(dateStr);
+      const now = new Date();
+      const days = (end - now) / (1000 * 60 * 60 * 24);
+      return days <= 7 && days >= 0;
+    }
+
+    function getDeadlineClass(dateStr) {
+      if (!dateStr) return '';
+      const end = new Date(dateStr);
+      const now = new Date();
+      const days = (end - now) / (1000 * 60 * 60 * 24);
+      if (days < 0) return 'urgent';
+      if (days <= 3) return 'urgent';
+      if (days <= 7) return 'soon';
+      return 'ok';
+    }
+
+    // ===== EVENT LISTENERS =====
+    function setupEventListeners() {
+      // Tabs
+      document.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('click', () => switchTab(tab.dataset.tab));
+      });
+
+      // Sub-tabs
+      document.querySelectorAll('.sub-tab').forEach(tab => {
+        tab.addEventListener('click', () => switchSubTab(tab.dataset.subtab));
+      });
+
+      // Server status indicator - tap to retry connection
+      document.getElementById('server-status').addEventListener('click', () => {
+        showToast('Checking server...', 'success');
+        checkServerAndLoad();
+      });
+
+      // Search
+      document.getElementById('discover-search').addEventListener('input', renderDiscover);
+
+      // Vehicle filter
+      document.getElementById('filter-vehicle').addEventListener('click', function() {
+        this.classList.toggle('active');
+        state.settings.vehicleFilter = this.classList.contains('active');
+        saveState();
+        renderDiscover();
+      });
+
+      // Refresh - re-check server first
+      document.getElementById('btn-refresh').addEventListener('click', checkServerAndLoad);
+
+      // Add sweepstakes
+      document.getElementById('btn-add').addEventListener('click', openAddSweep);
+
+      // Tracker filters
+      document.querySelectorAll('.status-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+          document.querySelectorAll('.status-btn').forEach(b => b.classList.remove('active'));
+          this.classList.add('active');
+          trackerFilter = this.dataset.status;
+          renderTracker();
+        });
+      });
+
+      // Edit profile
+      document.getElementById('btn-edit-profile').addEventListener('click', openEditProfile);
+
+      // Add feed
+      document.getElementById('btn-add-feed').addEventListener('click', () => {
+        document.getElementById('feed-name').value = '';
+        document.getElementById('feed-url').value = '';
+        openModal('modal-feed');
+      });
+
+      // Close modals on backdrop click
+      document.querySelectorAll('.modal-overlay').forEach(overlay => {
+        overlay.addEventListener('click', function(e) {
+          if (e.target === this) {
+            this.classList.remove('active');
+          }
+        });
+      });
+    }
+
+    // Start the app
+    init();
+  </script>
+</body>
+</html>
